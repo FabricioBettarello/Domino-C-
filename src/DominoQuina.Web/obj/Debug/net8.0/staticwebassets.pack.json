@@ -1,0 +1,25 @@
+{
+  "Files": [
+    {
+      "Id": "C:\\Users\\Fabricio Bettarello\\Desktop\\csharp\\src\\DominoQuina.Web\\wwwroot\\app.css",
+      "PackagePath": "staticwebassets\\app.css"
+    },
+    {
+      "Id": "obj\\Debug\\net8.0\\staticwebassets\\msbuild.DominoQuina.Web.Microsoft.AspNetCore.StaticWebAssets.props",
+      "PackagePath": "build\\Microsoft.AspNetCore.StaticWebAssets.props"
+    },
+    {
+      "Id": "obj\\Debug\\net8.0\\staticwebassets\\msbuild.build.DominoQuina.Web.props",
+      "PackagePath": "build\\DominoQuina.Web.props"
+    },
+    {
+      "Id": "obj\\Debug\\net8.0\\staticwebassets\\msbuild.buildMultiTargeting.DominoQuina.Web.props",
+      "PackagePath": "buildMultiTargeting\\DominoQuina.Web.props"
+    },
+    {
+      "Id": "obj\\Debug\\net8.0\\staticwebassets\\msbuild.buildTransitive.DominoQuina.Web.props",
+      "PackagePath": "buildTransitive\\DominoQuina.Web.props"
+    }
+  ],
+  "ElementsToRemove": []
+}

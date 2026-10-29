@@ -1,0 +1,16 @@
+@inherits LayoutComponentBase
+@inject IArmazenamentoCredenciais Credenciais
+
+<div class="app">
+    <header class="topo">
+        <a href="/" class="marca">Dominó <span>Ponta de Quina</span></a>
+        <nav>
+            <NavLink href="/" Match="NavLinkMatch.All">Conta</NavLink>
+            <NavLink href="/perfis">Perfis</NavLink>
+        </nav>
+        <span class="conta">@(Credenciais.Email ?? "não autenticado")</span>
+    </header>
+    <main>
+        @Body
+    </main>
+</div>

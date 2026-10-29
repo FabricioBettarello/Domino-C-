@@ -1,0 +1,131 @@
+{
+  "format": 1,
+  "restore": {
+    "C:\\Users\\Fabricio Bettarello\\Desktop\\csharp\\src\\DominoQuina.Web\\DominoQuina.Web.csproj": {}
+  },
+  "projects": {
+    "C:\\Users\\Fabricio Bettarello\\Desktop\\csharp\\src\\DominoQuina.Core\\DominoQuina.Core.csproj": {
+      "version": "1.0.0",
+      "restore": {
+        "projectUniqueName": "C:\\Users\\Fabricio Bettarello\\Desktop\\csharp\\src\\DominoQuina.Core\\DominoQuina.Core.csproj",
+        "projectName": "DominoQuina.Core",
+        "projectPath": "C:\\Users\\Fabricio Bettarello\\Desktop\\csharp\\src\\DominoQuina.Core\\DominoQuina.Core.csproj",
+        "packagesPath": "C:\\Users\\Fabricio Bettarello\\.nuget\\packages\\",
+        "outputPath": "C:\\Users\\Fabricio Bettarello\\Desktop\\csharp\\src\\DominoQuina.Core\\obj\\",
+        "projectStyle": "PackageReference",
+        "configFilePaths": [
+          "C:\\Users\\Fabricio Bettarello\\AppData\\Roaming\\NuGet\\NuGet.Config"
+        ],
+        "originalTargetFrameworks": [
+          "net8.0"
+        ],
+        "sources": {
+          "https://api.nuget.org/v3/index.json": {}
+        },
+        "frameworks": {
+          "net8.0": {
+            "targetAlias": "net8.0",
+            "projectReferences": {}
+          }
+        },
+        "warningProperties": {
+          "warnAsError": [
+            "NU1605"
+          ]
+        },
+        "restoreAuditProperties": {
+          "enableAudit": "true",
+          "auditLevel": "low",
+          "auditMode": "direct"
+        }
+      },
+      "frameworks": {
+        "net8.0": {
+          "targetAlias": "net8.0",
+          "imports": [
+            "net461",
+            "net462",
+            "net47",
+            "net471",
+            "net472",
+            "net48",
+            "net481"
+          ],
+          "assetTargetFallback": true,
+          "warn": true,
+          "frameworkReferences": {
+            "Microsoft.NETCore.App": {
+              "privateAssets": "all"
+            }
+          },
+          "runtimeIdentifierGraphPath": "C:\\Program Files\\dotnet\\sdk\\8.0.427/PortableRuntimeIdentifierGraph.json"
+        }
+      }
+    },
+    "C:\\Users\\Fabricio Bettarello\\Desktop\\csharp\\src\\DominoQuina.Web\\DominoQuina.Web.csproj": {
+      "version": "1.0.0",
+      "restore": {
+        "projectUniqueName": "C:\\Users\\Fabricio Bettarello\\Desktop\\csharp\\src\\DominoQuina.Web\\DominoQuina.Web.csproj",
+        "projectName": "DominoQuina.Web",
+        "projectPath": "C:\\Users\\Fabricio Bettarello\\Desktop\\csharp\\src\\DominoQuina.Web\\DominoQuina.Web.csproj",
+        "packagesPath": "C:\\Users\\Fabricio Bettarello\\.nuget\\packages\\",
+        "outputPath": "C:\\Users\\Fabricio Bettarello\\Desktop\\csharp\\src\\DominoQuina.Web\\obj\\",
+        "projectStyle": "PackageReference",
+        "configFilePaths": [
+          "C:\\Users\\Fabricio Bettarello\\AppData\\Roaming\\NuGet\\NuGet.Config"
+        ],
+        "originalTargetFrameworks": [
+          "net8.0"
+        ],
+        "sources": {
+          "https://api.nuget.org/v3/index.json": {}
+        },
+        "frameworks": {
+          "net8.0": {
+            "targetAlias": "net8.0",
+            "projectReferences": {
+              "C:\\Users\\Fabricio Bettarello\\Desktop\\csharp\\src\\DominoQuina.Core\\DominoQuina.Core.csproj": {
+                "projectPath": "C:\\Users\\Fabricio Bettarello\\Desktop\\csharp\\src\\DominoQuina.Core\\DominoQuina.Core.csproj"
+              }
+            }
+          }
+        },
+        "warningProperties": {
+          "warnAsError": [
+            "NU1605"
+          ]
+        },
+        "restoreAuditProperties": {
+          "enableAudit": "true",
+          "auditLevel": "low",
+          "auditMode": "direct"
+        }
+      },
+      "frameworks": {
+        "net8.0": {
+          "targetAlias": "net8.0",
+          "imports": [
+            "net461",
+            "net462",
+            "net47",
+            "net471",
+            "net472",
+            "net48",
+            "net481"
+          ],
+          "assetTargetFallback": true,
+          "warn": true,
+          "frameworkReferences": {
+            "Microsoft.AspNetCore.App": {
+              "privateAssets": "none"
+            },
+            "Microsoft.NETCore.App": {
+              "privateAssets": "all"
+            }
+          },
+          "runtimeIdentifierGraphPath": "C:\\Program Files\\dotnet\\sdk\\8.0.427/PortableRuntimeIdentifierGraph.json"
+        }
+      }
+    }
+  }
+}

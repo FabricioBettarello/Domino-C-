@@ -1,0 +1,141 @@
+@page "/perfis"
+@inject IDominoApiClient Api
+@inject IArmazenamentoCredenciais Credenciais
+@inject GerenciadorAtivacao Ativacao
+@inject NavigationManager Navegacao
+
+<PageTitle>Perfis · Dominó Ponta de Quina</PageTitle>
+
+<section class="painel estreito">
+    <h1>Jogador-perfil</h1>
+
+    @if (Credenciais.Token is null)
+    {
+        <p>Você ainda não informou o token. <a href="/">Ir para o acesso</a>.</p>
+    }
+    else
+    {
+    <p class="dica">
+        Ao ativar, este cliente gera uma chave aleatória de 64 caracteres hexadecimais, guarda-a protegida
+        e a envia no cabeçalho <code>X-Jogador-Ativacao</code>. Um perfil só fica ativo em um cliente por vez.
+    </p>
+
+    @if (_perfis.Count > 0)
+    {
+        <ul class="lista-perfis">
+            @foreach (var perfil in _perfis)
+            {
+                var temChave = Credenciais.ObterChaveAtivacao(perfil.Id) is not null;
+                <li>
+                    <div>
+                        <strong>@(perfil.Nome ?? "Perfil")</strong>
+                        <code>@perfil.Id</code>
+                        @if (temChave) { <span class="etiqueta">chave neste cliente</span> }
+                    </div>
+                    <div class="linha-botoes">
+                        <button class="botao primario" disabled="@_ocupado" @onclick="() => AtivarEJogarAsync(perfil.Id)">Ativar e jogar</button>
+                        @if (temChave)
+                        {
+                            <button class="botao" disabled="@_ocupado" @onclick="() => LiberarAsync(perfil.Id)">Liberar perfil</button>
+                        }
+                    </div>
+                </li>
+            }
+        </ul>
+    }
+    else if (!_carregando)
+    {
+        <p class="dica">Nenhum perfil listado. Informe o ID do jogador-perfil abaixo.</p>
+    }
+
+    <form class="linha-form" @onsubmit="() => AtivarEJogarAsync(_novoId.Trim())" @onsubmit:preventDefault>
+        <label>ID do jogador-perfil
+            <input @bind="_novoId" placeholder="ex.: 3fa85f64-5717-4562-b3fc-2c963f66afa6" required />
+        </label>
+        <button class="botao primario" type="submit" disabled="@_ocupado">Ativar e jogar</button>
+    </form>
+
+    @if (_aviso is not null)
+    {
+        <p class="sucesso">@_aviso</p>
+    }
+    <AlertaErro Erro="_erro" Mensagem="@_mensagemErro" />
+    }
+</section>
+
+@code {
+    private List<PerfilJogador> _perfis = [];
+    private string _novoId = "";
+    private bool _carregando = true;
+    private bool _ocupado;
+    private string? _aviso;
+    private string? _mensagemErro;
+    private ApiException? _erro;
+
+    protected override async Task OnInitializedAsync()
+    {
+        if (Credenciais.Token is null) return;
+
+        try
+        {
+            _perfis = (await Api.ListarPerfisAsync()).ToList();
+        }
+        catch (ApiException ex) when (ex.StatusCode is HttpStatusCode.NotFound or HttpStatusCode.MethodNotAllowed)
+        {
+            // A listagem de perfis pode não existir na API; o ID pode ser informado manualmente.
+        }
+        catch (ApiException ex) { _erro = ex; }
+        catch (Exception ex) when (ex is HttpRequestException or TaskCanceledException)
+        {
+            _mensagemErro = $"Não foi possível falar com a API: {ex.Message}";
+        }
+
+        // Perfis com chave guardada também aparecem, para retomar depois de reabrir o app.
+        foreach (var id in Credenciais.PerfisConhecidos.Where(id => _perfis.All(p => p.Id != id)))
+            _perfis.Add(new PerfilJogador(id, null));
+
+        _carregando = false;
+    }
+
+    private async Task AtivarEJogarAsync(string jogadorId)
+    {
+        if (string.IsNullOrWhiteSpace(jogadorId)) return;
+        Limpar();
+        _ocupado = true;
+        try
+        {
+            await Ativacao.AtivarAsync(jogadorId);
+            Navegacao.NavigateTo($"/jogador/{Uri.EscapeDataString(jogadorId)}/partidas");
+        }
+        catch (ApiException ex) { _erro = ex; }
+        catch (Exception ex) when (ex is HttpRequestException or TaskCanceledException)
+        {
+            _mensagemErro = $"Sem resposta da API. Tente ativar de novo: a mesma chave será reutilizada. ({ex.Message})";
+        }
+        finally { _ocupado = false; }
+    }
+
+    private async Task LiberarAsync(string jogadorId)
+    {
+        Limpar();
+        _ocupado = true;
+        try
+        {
+            await Ativacao.LiberarAsync(jogadorId);
+            _aviso = "Perfil liberado. Outro cliente já pode ativá-lo com uma chave nova.";
+        }
+        catch (ApiException ex) { _erro = ex; }
+        catch (Exception ex) when (ex is HttpRequestException or TaskCanceledException)
+        {
+            _mensagemErro = $"Sem resposta da API: {ex.Message}";
+        }
+        finally { _ocupado = false; }
+    }
+
+    private void Limpar()
+    {
+        _erro = null;
+        _mensagemErro = null;
+        _aviso = null;
+    }
+}

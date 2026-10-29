@@ -1,0 +1,13 @@
+C:\Users\Fabricio Bettarello\Desktop\csharp\src\DominoQuina.Core\bin\Debug\net8.0\DominoQuina.Core.deps.json
+C:\Users\Fabricio Bettarello\Desktop\csharp\src\DominoQuina.Core\bin\Debug\net8.0\DominoQuina.Core.dll
+C:\Users\Fabricio Bettarello\Desktop\csharp\src\DominoQuina.Core\bin\Debug\net8.0\DominoQuina.Core.pdb
+C:\Users\Fabricio Bettarello\Desktop\csharp\src\DominoQuina.Core\bin\Debug\net8.0\DominoQuina.Core.xml
+C:\Users\Fabricio Bettarello\Desktop\csharp\src\DominoQuina.Core\obj\Debug\net8.0\DominoQuina.Core.GeneratedMSBuildEditorConfig.editorconfig
+C:\Users\Fabricio Bettarello\Desktop\csharp\src\DominoQuina.Core\obj\Debug\net8.0\DominoQuina.Core.AssemblyInfoInputs.cache
+C:\Users\Fabricio Bettarello\Desktop\csharp\src\DominoQuina.Core\obj\Debug\net8.0\DominoQuina.Core.AssemblyInfo.cs
+C:\Users\Fabricio Bettarello\Desktop\csharp\src\DominoQuina.Core\obj\Debug\net8.0\DominoQuina.Core.csproj.CoreCompileInputs.cache
+C:\Users\Fabricio Bettarello\Desktop\csharp\src\DominoQuina.Core\obj\Debug\net8.0\DominoQuina.Core.dll
+C:\Users\Fabricio Bettarello\Desktop\csharp\src\DominoQuina.Core\obj\Debug\net8.0\refint\DominoQuina.Core.dll
+C:\Users\Fabricio Bettarello\Desktop\csharp\src\DominoQuina.Core\obj\Debug\net8.0\DominoQuina.Core.xml
+C:\Users\Fabricio Bettarello\Desktop\csharp\src\DominoQuina.Core\obj\Debug\net8.0\DominoQuina.Core.pdb
+C:\Users\Fabricio Bettarello\Desktop\csharp\src\DominoQuina.Core\obj\Debug\net8.0\ref\DominoQuina.Core.dll

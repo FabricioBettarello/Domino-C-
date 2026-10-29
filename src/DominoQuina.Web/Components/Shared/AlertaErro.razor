@@ -1,0 +1,34 @@
+@* Mostra a rejeição da API com o código HTTP, a orientação ao jogador e a mensagem do servidor. *@
+
+@if (Erro is not null || !string.IsNullOrWhiteSpace(Mensagem))
+{
+    <div class="alerta erro" role="alert">
+        @if (Erro is not null)
+        {
+            <strong>HTTP @((int)Erro.StatusCode)@(Erro.Codigo is null ? "" : $" · {Erro.Codigo}")</strong>
+            <span>@Erro.Orientacao</span>
+            @if (!string.IsNullOrWhiteSpace(Erro.MensagemServidor))
+            {
+                <small>Servidor: @Erro.MensagemServidor</small>
+            }
+            @if (Erro.ExigeNovaAutenticacao)
+            {
+                <a href="/">Informar novo token</a>
+            }
+        }
+        else
+        {
+            <span>@Mensagem</span>
+        }
+        @if (AoFechar.HasDelegate)
+        {
+            <button type="button" class="fechar" @onclick="AoFechar" aria-label="Fechar">×</button>
+        }
+    </div>
+}
+
+@code {
+    [Parameter] public ApiException? Erro { get; set; }
+    [Parameter] public string? Mensagem { get; set; }
+    [Parameter] public EventCallback AoFechar { get; set; }
+}

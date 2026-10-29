@@ -1,0 +1,323 @@
+<?xml version="1.0"?>
+<doc>
+    <assembly>
+        <name>DominoQuina.Core</name>
+    </assembly>
+    <members>
+        <member name="T:DominoQuina.Core.Api.ApiException">
+            <summary>
+            Rejeição devolvida pela API. Carrega o código HTTP, o código de negócio
+            (ex.: <c>JOGADOR_JA_ATIVO</c>) e a orientação que o cliente deve mostrar.
+            </summary>
+        </member>
+        <member name="P:DominoQuina.Core.Api.ApiException.AguardarPor">
+            <summary>Janela informada pela API (Retry-After) nos casos de limite de solicitações.</summary>
+        </member>
+        <member name="P:DominoQuina.Core.Api.ApiException.Orientacao">
+            <summary>O que o cliente deve fazer diante desta rejeição.</summary>
+        </member>
+        <member name="M:DominoQuina.Core.Api.ApiException.De(System.Net.HttpStatusCode,System.String,System.Nullable{System.TimeSpan})">
+            <summary>Cria a exceção a partir do status e do corpo de erro (ProblemDetails ou JSON próprio).</summary>
+        </member>
+        <member name="T:DominoQuina.Core.Api.ComandoTurno">
+            <summary>Comando de turno sem pedra (iniciar, comprar, passar).</summary>
+        </member>
+        <member name="M:DominoQuina.Core.Api.ComandoTurno.#ctor(System.String,System.Int64,System.Guid)">
+            <summary>Comando de turno sem pedra (iniciar, comprar, passar).</summary>
+        </member>
+        <member name="T:DominoQuina.Core.Api.ComandoJogada">
+            <summary>Comando de jogada: pedra escolhida e ponta (lado 0 = esquerda, 1 = direita).</summary>
+        </member>
+        <member name="M:DominoQuina.Core.Api.ComandoJogada.#ctor(System.String,System.Int64,System.Guid,System.Int32,System.Int32,DominoQuina.Core.Modelos.LadoMesa)">
+            <summary>Comando de jogada: pedra escolhida e ponta (lado 0 = esquerda, 1 = direita).</summary>
+        </member>
+        <member name="T:DominoQuina.Core.Api.DominoApiClient">
+            <summary>
+            Cliente HTTP da API. Envia o Bearer token em todas as rotas protegidas e,
+            nas ações e consultas privadas, a chave do cabeçalho <c>X-Jogador-Ativacao</c>.
+            </summary>
+        </member>
+        <member name="M:DominoQuina.Core.Api.DominoApiClient.#ctor(System.Net.Http.HttpClient,DominoQuina.Core.Seguranca.IProvedorCredenciais)">
+            <summary>
+            Cliente HTTP da API. Envia o Bearer token em todas as rotas protegidas e,
+            nas ações e consultas privadas, a chave do cabeçalho <c>X-Jogador-Ativacao</c>.
+            </summary>
+        </member>
+        <member name="M:DominoQuina.Core.Api.DominoApiClient.EnviarComandoAsync(System.String,System.Object,System.String,System.Threading.CancellationToken)">
+            <summary>Envia um comando de turno e devolve o estado confirmado que vem na resposta.</summary>
+        </member>
+        <member name="M:DominoQuina.Core.Api.DominoApiClient.EnviarAsync(System.Net.Http.HttpRequestMessage,System.Threading.CancellationToken)">
+            <summary>Envia a requisição; devolve o JSON da resposta, ou <c>null</c> se ela vier vazia (ex.: 202, 204).</summary>
+        </member>
+        <member name="T:DominoQuina.Core.Api.IDominoApiClient">
+            <summary>
+            Operações da API do Dominó Ponta de Quina. Toda rejeição vira <see cref="T:DominoQuina.Core.Api.ApiException"/>;
+            o cliente nunca trata uma ação rejeitada como sucesso.
+            </summary>
+        </member>
+        <member name="M:DominoQuina.Core.Api.IDominoApiClient.SolicitarTokenAsync(System.String,System.Threading.CancellationToken)">
+            <summary>Pede o token. A API responde 202 e envia o token por e-mail.</summary>
+        </member>
+        <member name="M:DominoQuina.Core.Api.IDominoApiClient.CriarPartidaAsync(System.String,System.Int32,System.Threading.CancellationToken)">
+            <summary>Cria a mesa e devolve o id da partida.</summary>
+        </member>
+        <member name="M:DominoQuina.Core.Api.IDominoApiClient.ObterAtualizacoesAsync(System.String,System.String,System.Int64,System.Threading.CancellationToken)">
+            <summary>Devolve o estado novo (200) ou <c>null</c> quando nada mudou (204).</summary>
+        </member>
+        <member name="T:DominoQuina.Core.Api.LeitorJson">
+            <summary>
+            Leitura tolerante de JSON: procura propriedades por vários nomes possíveis,
+            ignorando maiúsculas, underscores e hífens. Assim pequenas diferenças de nome
+            no contrato não quebram o cliente.
+            </summary>
+        </member>
+        <member name="M:DominoQuina.Core.Api.LeitorJson.Identificador(System.Text.Json.JsonElement,System.String[])">
+            <summary>Lê um identificador que pode vir como texto, número ou objeto com "id".</summary>
+        </member>
+        <member name="M:DominoQuina.Core.Api.LeitorJson.Normalizar(System.String)">
+            <summary>Minúsculas, sem acentos e somente letras e dígitos ("Jogar_Abertura" vira "jogarabertura").</summary>
+        </member>
+        <member name="T:DominoQuina.Core.Api.MapeadorRespostas">
+            <summary>
+            Converte o JSON da API nos modelos do cliente. Cada campo aceita alguns nomes
+            alternativos; quando a API não informa algo (ex.: pontas), o valor é derivado da mesa.
+            </summary>
+        </member>
+        <member name="M:DominoQuina.Core.Api.MapeadorRespostas.LerPedra(System.Nullable{System.Text.Json.JsonElement})">
+            <summary>Aceita pedra como objeto ({valorA, valorB}), array ([6,1]) ou texto ("6-1", "[6|1]").</summary>
+        </member>
+        <member name="M:DominoQuina.Core.Api.MapeadorRespostas.LerQuantidade(System.Text.Json.JsonElement,System.String[])">
+            <summary>Lê um número ou, se vier uma lista, o tamanho dela.</summary>
+        </member>
+        <member name="T:DominoQuina.Core.Api.Rotas">
+            <summary>Rotas da API do Dominó Ponta de Quina, centralizadas para facilitar ajustes.</summary>
+        </member>
+        <member name="F:DominoQuina.Core.Api.Rotas.CabecalhoAtivacao">
+            <summary>Cabeçalho que identifica este cliente para o jogador-perfil ativado.</summary>
+        </member>
+        <member name="T:DominoQuina.Core.Jogo.Decisao">
+            <summary>O que o jogador autônomo decidiu fazer e por quê.</summary>
+        </member>
+        <member name="M:DominoQuina.Core.Jogo.Decisao.#ctor(DominoQuina.Core.Jogo.TipoDecisao,System.Nullable{DominoQuina.Core.Modelos.Pedra},DominoQuina.Core.Modelos.LadoMesa,System.String)">
+            <summary>O que o jogador autônomo decidiu fazer e por quê.</summary>
+        </member>
+        <member name="T:DominoQuina.Core.Jogo.IEstrategiaJogo">
+            <summary>Estratégia de jogo usada pelo jogador autônomo.</summary>
+        </member>
+        <member name="T:DominoQuina.Core.Jogo.EstrategiaPontaDeQuina">
+            <summary>
+            Estratégia gulosa da Ponta de Quina:
+            1) joga a pedra que mais pontua agora (soma das pontas múltipla de 5);
+            2) no empate, prefere duplas (difíceis de encaixar depois);
+            3) depois, a pedra de maior soma (reduz pontos na mão se a mesa travar).
+            Sem encaixe, compra se o estado permitir; senão, passa.
+            </summary>
+        </member>
+        <member name="T:DominoQuina.Core.Jogo.JogadorAutonomo">
+            <summary>
+            Joga sozinho: quando o estado confirmado indica a vez deste perfil,
+            pede uma decisão à estratégia e envia a ação pela sessão.
+            </summary>
+        </member>
+        <member name="M:DominoQuina.Core.Jogo.JogadorAutonomo.#ctor(DominoQuina.Core.Jogo.IEstrategiaJogo)">
+            <summary>
+            Joga sozinho: quando o estado confirmado indica a vez deste perfil,
+            pede uma decisão à estratégia e envia a ação pela sessão.
+            </summary>
+        </member>
+        <member name="P:DominoQuina.Core.Jogo.JogadorAutonomo.UltimaDecisao">
+            <summary>Última decisão tomada, para exibir na tela.</summary>
+        </member>
+        <member name="M:DominoQuina.Core.Jogo.JogadorAutonomo.JogarVezAsync(DominoQuina.Core.Jogo.SessaoPartida,System.Threading.CancellationToken)">
+            <summary>Age uma vez se for a vez do jogador. Retorna <c>null</c> quando não havia nada a fazer.</summary>
+        </member>
+        <member name="T:DominoQuina.Core.Jogo.JogadaPossivel">
+            <summary>Uma jogada possível: pedra da mão, ponta escolhida e pontos que renderia.</summary>
+        </member>
+        <member name="M:DominoQuina.Core.Jogo.JogadaPossivel.#ctor(DominoQuina.Core.Modelos.Pedra,DominoQuina.Core.Modelos.LadoMesa,System.Int32)">
+            <summary>Uma jogada possível: pedra da mão, ponta escolhida e pontos que renderia.</summary>
+        </member>
+        <member name="T:DominoQuina.Core.Jogo.RegrasMesa">
+            <summary>
+            Regras locais usadas para exibir a mesa e sugerir jogadas.
+            A API continua sendo a autoridade: ela valida a jogada e informa a pontuação oficial.
+            </summary>
+        </member>
+        <member name="M:DominoQuina.Core.Jogo.RegrasMesa.PontosPorSoma(System.Int32)">
+            <summary>Pontos da Ponta de Quina: soma das pontas múltipla de 5 vale soma ÷ 5.</summary>
+        </member>
+        <member name="M:DominoQuina.Core.Jogo.RegrasMesa.OrientarCadeia(System.Collections.Generic.IReadOnlyList{DominoQuina.Core.Modelos.Pedra})">
+            <summary>Orienta a cadeia para que lados vizinhos se toquem com o mesmo valor.</summary>
+        </member>
+        <member name="M:DominoQuina.Core.Jogo.RegrasMesa.JogadasValidas(System.Collections.Generic.IEnumerable{DominoQuina.Core.Modelos.Pedra},System.Int32,System.Int32)">
+            <summary>Todas as jogadas válidas da mão nas pontas atuais, com os pontos de cada uma.</summary>
+        </member>
+        <member name="M:DominoQuina.Core.Jogo.RegrasMesa.JogadasValidas(DominoQuina.Core.Modelos.EstadoPartida)">
+            <summary>Jogadas válidas a partir do estado; na abertura, só a pedra obrigatória (ou qualquer uma, se não indicada).</summary>
+        </member>
+        <member name="T:DominoQuina.Core.Jogo.PenalidadeDemora">
+            <summary>Regra futura do slide 14: desconto por demora para agir depois de receber o turno.</summary>
+        </member>
+        <member name="T:DominoQuina.Core.Jogo.ResultadoAcao">
+            <summary>Resultado de uma ação enviada à API. Falhas nunca são mostradas como sucesso.</summary>
+        </member>
+        <member name="M:DominoQuina.Core.Jogo.ResultadoAcao.#ctor(System.Boolean,System.String,DominoQuina.Core.Api.ApiException)">
+            <summary>Resultado de uma ação enviada à API. Falhas nunca são mostradas como sucesso.</summary>
+        </member>
+        <member name="T:DominoQuina.Core.Jogo.SessaoPartida">
+            <summary>
+            Acompanha uma partida para um jogador-perfil:
+            guarda o último estado confirmado, aplica apenas versões mais novas,
+            envia comandos com versão esperada + chave de idempotência e mede o tempo no turno.
+            </summary>
+        </member>
+        <member name="M:DominoQuina.Core.Jogo.SessaoPartida.#ctor(DominoQuina.Core.Api.IDominoApiClient,System.String,System.String,System.TimeProvider)">
+            <summary>
+            Acompanha uma partida para um jogador-perfil:
+            guarda o último estado confirmado, aplica apenas versões mais novas,
+            envia comandos com versão esperada + chave de idempotência e mede o tempo no turno.
+            </summary>
+        </member>
+        <member name="F:DominoQuina.Core.Jogo.SessaoPartida.MaximoTentativas">
+            <summary>Tentativas da mesma intenção quando a resposta se perde (rede/timeout).</summary>
+        </member>
+        <member name="P:DominoQuina.Core.Jogo.SessaoPartida.InicioDoTurno">
+            <summary>Momento em que este cliente recebeu o turno (base da regra de desconto por demora).</summary>
+        </member>
+        <member name="M:DominoQuina.Core.Jogo.SessaoPartida.CarregarAsync(System.Threading.CancellationToken)">
+            <summary>Busca a visão completa atual (entrada na mesa ou reconexão).</summary>
+        </member>
+        <member name="M:DominoQuina.Core.Jogo.SessaoPartida.SincronizarAsync(System.Threading.CancellationToken)">
+            <summary>Consulta atualizações. Retorna <c>true</c> se chegou estado mais novo (200); <c>false</c> em 204.</summary>
+        </member>
+        <member name="M:DominoQuina.Core.Jogo.SessaoPartida.Aplicar(DominoQuina.Core.Modelos.EstadoPartida,System.Boolean)">
+            <summary>Aplica um estado somente se a versão for mais nova que a conhecida.</summary>
+        </member>
+        <member name="M:DominoQuina.Core.Jogo.SessaoPartida.ExecutarAsync(System.String,System.Func{System.Int64,System.Guid,System.Threading.CancellationToken,System.Threading.Tasks.Task{DominoQuina.Core.Modelos.EstadoPartida}},System.Threading.CancellationToken)">
+            <summary>
+            Envia uma intenção de ação. A chave de idempotência é gerada uma vez por intenção
+            e repetida nas novas tentativas, então a API não duplica a jogada.
+            </summary>
+        </member>
+        <member name="T:DominoQuina.Core.Modelos.LadoMesa">
+            <summary>Ponta da mesa onde a pedra será encaixada. O valor numérico é o enviado à API.</summary>
+        </member>
+        <member name="T:DominoQuina.Core.Modelos.ProximaAcao">
+            <summary>Próxima ação que o estado da partida indica para este jogador.</summary>
+        </member>
+        <member name="T:DominoQuina.Core.Modelos.EstadoPartida">
+            <summary>
+            Visão da partida confirmada pela API para um jogador.
+            Contém a mão própria, mas nunca a mão do adversário (apenas a quantidade de pedras).
+            </summary>
+        </member>
+        <member name="P:DominoQuina.Core.Modelos.EstadoPartida.Versao">
+            <summary>Versão do estado. Comandos enviam esta versão como <c>versaoEsperada</c>.</summary>
+        </member>
+        <member name="P:DominoQuina.Core.Modelos.EstadoPartida.Mesa">
+            <summary>Pedras jogadas, da ponta esquerda para a direita.</summary>
+        </member>
+        <member name="P:DominoQuina.Core.Modelos.EstadoPartida.PedraAbertura">
+            <summary>Pedra obrigatória de abertura, quando a API indica.</summary>
+        </member>
+        <member name="P:DominoQuina.Core.Modelos.EstadoPartida.JsonBruto">
+            <summary>JSON recebido, mantido para conferência na tela.</summary>
+        </member>
+        <member name="P:DominoQuina.Core.Modelos.EstadoPartida.EmEspera">
+            <summary>Sala de espera: ainda não houve distribuição de pedras.</summary>
+        </member>
+        <member name="T:DominoQuina.Core.Modelos.PontuacaoJogador">
+            <summary>Pontuação acumulada de um participante.</summary>
+        </member>
+        <member name="M:DominoQuina.Core.Modelos.PontuacaoJogador.#ctor(System.String,System.String,System.Int32,System.Boolean)">
+            <summary>Pontuação acumulada de um participante.</summary>
+        </member>
+        <member name="T:DominoQuina.Core.Modelos.ResumoPartida">
+            <summary>Linha da lista de partidas (sala de partidas).</summary>
+        </member>
+        <member name="P:DominoQuina.Core.Modelos.ResumoPartida.Participo">
+            <summary>Indica se o jogador consultado já participa da partida.</summary>
+        </member>
+        <member name="T:DominoQuina.Core.Modelos.PerfilJogador">
+            <summary>Jogador-perfil pertencente à conta autenticada.</summary>
+        </member>
+        <member name="M:DominoQuina.Core.Modelos.PerfilJogador.#ctor(System.String,System.String)">
+            <summary>Jogador-perfil pertencente à conta autenticada.</summary>
+        </member>
+        <member name="T:DominoQuina.Core.Modelos.ResultadoPartida">
+            <summary>Resultado final informado pela API.</summary>
+        </member>
+        <member name="T:DominoQuina.Core.Modelos.Pedra">
+            <summary>
+            Uma pedra de dominó com dois valores de 0 a 6.
+            A ordem dos valores só importa para exibir a pedra orientada na mesa.
+            </summary>
+        </member>
+        <member name="M:DominoQuina.Core.Modelos.Pedra.#ctor(System.Int32,System.Int32)">
+            <summary>
+            Uma pedra de dominó com dois valores de 0 a 6.
+            A ordem dos valores só importa para exibir a pedra orientada na mesa.
+            </summary>
+        </member>
+        <member name="P:DominoQuina.Core.Modelos.Pedra.EhDupla">
+            <summary>Pedra com os dois lados iguais (ex.: [6|6]).</summary>
+        </member>
+        <member name="P:DominoQuina.Core.Modelos.Pedra.Soma">
+            <summary>Soma dos dois lados, usada para desempatar escolhas.</summary>
+        </member>
+        <member name="M:DominoQuina.Core.Modelos.Pedra.Encaixa(System.Int32)">
+            <summary>Indica se algum lado da pedra combina com o valor da ponta.</summary>
+        </member>
+        <member name="M:DominoQuina.Core.Modelos.Pedra.ValorExposto(System.Int32)">
+            <summary>Valor que fica exposto depois de encaixar a pedra na ponta informada.</summary>
+        </member>
+        <member name="M:DominoQuina.Core.Modelos.Pedra.Invertida">
+            <summary>A mesma pedra com os lados trocados.</summary>
+        </member>
+        <member name="M:DominoQuina.Core.Modelos.Pedra.MesmaPedra(DominoQuina.Core.Modelos.Pedra)">
+            <summary>Compara duas pedras ignorando a orientação ([6|1] é a mesma pedra que [1|6]).</summary>
+        </member>
+        <member name="T:DominoQuina.Core.Seguranca.IProvedorCredenciais">
+            <summary>Fornece ao cliente HTTP o token e a chave de ativação de cada perfil.</summary>
+        </member>
+        <member name="T:DominoQuina.Core.Seguranca.IArmazenamentoCredenciais">
+            <summary>Guarda token, e-mail e chaves de ativação entre execuções do aplicativo.</summary>
+        </member>
+        <member name="M:DominoQuina.Core.Seguranca.IArmazenamentoCredenciais.ObterOuCriarChaveAtivacao(System.String)">
+            <summary>Devolve a chave já guardada do perfil ou gera e guarda uma nova.</summary>
+        </member>
+        <member name="T:DominoQuina.Core.Seguranca.IProtetorDados">
+            <summary>Criptografa e descriptografa o conteúdo gravado em disco.</summary>
+        </member>
+        <member name="T:DominoQuina.Core.Seguranca.GeradorChaveAtivacao">
+            <summary>Gera a chave aleatória de ativação: 32 bytes criptograficamente seguros = 64 caracteres hexadecimais.</summary>
+        </member>
+        <member name="T:DominoQuina.Core.Seguranca.ArmazenamentoCredenciaisEmArquivo">
+            <summary>
+            Armazenamento em arquivo. O conteúdo é protegido por <see cref="T:DominoQuina.Core.Seguranca.IProtetorDados"/>
+            (na aplicação web, ASP.NET Data Protection), então token e chaves não ficam em texto puro.
+            </summary>
+        </member>
+        <member name="T:DominoQuina.Core.Seguranca.GerenciadorAtivacao">
+            <summary>
+            Ativa e libera jogadores-perfis neste cliente.
+            A mesma chave é reutilizada ao reabrir o app; só uma liberação explícita a descarta.
+            </summary>
+        </member>
+        <member name="M:DominoQuina.Core.Seguranca.GerenciadorAtivacao.#ctor(DominoQuina.Core.Api.IDominoApiClient,DominoQuina.Core.Seguranca.IArmazenamentoCredenciais)">
+            <summary>
+            Ativa e libera jogadores-perfis neste cliente.
+            A mesma chave é reutilizada ao reabrir o app; só uma liberação explícita a descarta.
+            </summary>
+        </member>
+        <member name="M:DominoQuina.Core.Seguranca.GerenciadorAtivacao.AtivarAsync(System.String,System.Threading.CancellationToken)">
+            <summary>
+            Ativa (ou retoma) o perfil com a chave deste cliente. Repetir é seguro: a API
+            reconhece a ativação existente. Em 409 JOGADOR_JA_ATIVO a chave é mantida.
+            </summary>
+        </member>
+        <member name="M:DominoQuina.Core.Seguranca.GerenciadorAtivacao.LiberarAsync(System.String,System.Threading.CancellationToken)">
+            <summary>Libera o perfil para ser ativado em outro cliente e descarta a chave local.</summary>
+        </member>
+    </members>
+</doc>

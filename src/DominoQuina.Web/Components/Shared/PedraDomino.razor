@@ -1,0 +1,46 @@
+@* Desenha uma pedra de dominó com pontos (pips). Virada = mostra o verso (pedras do adversário). *@
+
+<button type="button"
+        class="pedra @(Vertical ? "vertical" : "horizontal") @(Selecionada ? "selecionada" : "") @(Destaque ? "destaque" : "") @(Clicavel ? "clicavel" : "") @(Desabilitada ? "desabilitada" : "")"
+        title="@(Virada ? "Pedra do adversário" : Pedra.ToString())"
+        disabled="@(!Clicavel)"
+        @onclick="OnClick">
+    @if (Virada)
+    {
+        <span class="verso"></span>
+    }
+    else
+    {
+        <span class="metade">@Pontos(Pedra.ValorA)</span>
+        <span class="divisor"></span>
+        <span class="metade">@Pontos(Pedra.ValorB)</span>
+    }
+</button>
+
+@code {
+    [Parameter] public Pedra Pedra { get; set; }
+    [Parameter] public bool Vertical { get; set; }
+    [Parameter] public bool Virada { get; set; }
+    [Parameter] public bool Selecionada { get; set; }
+    [Parameter] public bool Destaque { get; set; }
+    [Parameter] public bool Desabilitada { get; set; }
+    [Parameter] public EventCallback OnClick { get; set; }
+
+    private bool Clicavel => OnClick.HasDelegate && !Desabilitada && !Virada;
+
+    // Posições acesas na grade 3x3 de cada metade (0 = canto superior esquerdo, 8 = inferior direito).
+    private static readonly int[][] PosicoesVertical =
+        [[], [4], [0, 8], [0, 4, 8], [0, 2, 6, 8], [0, 2, 4, 6, 8], [0, 2, 3, 5, 6, 8]];
+
+    private static readonly int[][] PosicoesHorizontal =
+        [[], [4], [2, 6], [2, 4, 6], [0, 2, 6, 8], [0, 2, 4, 6, 8], [0, 1, 2, 6, 7, 8]];
+
+    private RenderFragment Pontos(int valor) => __builder =>
+    {
+        var acesas = (Vertical ? PosicoesVertical : PosicoesHorizontal)[Math.Clamp(valor, 0, 6)];
+        for (var i = 0; i < 9; i++)
+        {
+            <span class="pip @(acesas.Contains(i) ? "on" : "")"></span>
+        }
+    };
+}

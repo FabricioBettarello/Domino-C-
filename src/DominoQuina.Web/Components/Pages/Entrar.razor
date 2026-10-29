@@ -1,0 +1,103 @@
+@page "/"
+@inject IDominoApiClient Api
+@inject IArmazenamentoCredenciais Credenciais
+@inject NavigationManager Navegacao
+
+<PageTitle>Conta · Dominó Ponta de Quina</PageTitle>
+
+<section class="painel estreito">
+    <h1>Acesso à API</h1>
+
+    @if (Credenciais.Token is not null)
+    {
+        <p class="sucesso">Token salvo para <strong>@Credenciais.Email</strong>. Ele é reutilizado até ser revogado.</p>
+        <div class="linha-botoes">
+            <a class="botao primario" href="/perfis">Escolher jogador-perfil</a>
+            <button class="botao" @onclick="Sair">Apagar token</button>
+        </div>
+        <hr />
+    }
+
+    <h2>1. Solicitar token</h2>
+    <p class="dica">A primeira solicitação com e-mail FIAP cria a conta. A API responde 202 e envia o token por e-mail.</p>
+    <form @onsubmit="SolicitarTokenAsync" @onsubmit:preventDefault>
+        <label>E-mail FIAP
+            <input type="email" @bind="_email" placeholder="rm00000@fiap.com.br" required />
+        </label>
+        <button class="botao primario" type="submit" disabled="@_ocupado">Solicitar token</button>
+    </form>
+    @if (_mensagemSolicitacao is not null)
+    {
+        <p class="sucesso">@_mensagemSolicitacao</p>
+    }
+
+    <h2>2. Informar o token recebido</h2>
+    <form @onsubmit="SalvarToken" @onsubmit:preventDefault>
+        <label>Token (Bearer)
+            <textarea @bind="_token" rows="3" placeholder="Cole aqui o token do e-mail" required></textarea>
+        </label>
+        <button class="botao primario" type="submit">Salvar e continuar</button>
+    </form>
+
+    <AlertaErro Erro="_erro" Mensagem="@_mensagemErro" />
+</section>
+
+@code {
+    private string _email = "";
+    private string _token = "";
+    private bool _ocupado;
+    private string? _mensagemSolicitacao;
+    private string? _mensagemErro;
+    private ApiException? _erro;
+
+    protected override void OnInitialized() => _email = Credenciais.Email ?? "";
+
+    private async Task SolicitarTokenAsync()
+    {
+        LimparMensagens();
+        if (!_email.Trim().EndsWith("@fiap.com.br", StringComparison.OrdinalIgnoreCase))
+        {
+            _mensagemErro = "Use o seu e-mail FIAP (@fiap.com.br).";
+            return;
+        }
+
+        _ocupado = true;
+        try
+        {
+            await Api.SolicitarTokenAsync(_email.Trim());
+            _mensagemSolicitacao = $"Solicitação aceita. Verifique a caixa de entrada de {_email.Trim()}.";
+        }
+        catch (ApiException ex) { _erro = ex; }
+        catch (HttpRequestException ex) { _mensagemErro = $"Não foi possível falar com a API: {ex.Message}"; }
+        catch (TaskCanceledException) { _mensagemErro = "A API não respondeu a tempo."; }
+        finally { _ocupado = false; }
+    }
+
+    private void SalvarToken()
+    {
+        LimparMensagens();
+        var token = _token.Trim();
+        if (token.StartsWith("Bearer ", StringComparison.OrdinalIgnoreCase)) token = token[7..].Trim();
+        if (token.Length == 0 || string.IsNullOrWhiteSpace(_email))
+        {
+            _mensagemErro = "Informe o e-mail e o token.";
+            return;
+        }
+
+        Credenciais.SalvarToken(_email, token);
+        Navegacao.NavigateTo("/perfis");
+    }
+
+    private void Sair()
+    {
+        Credenciais.RemoverToken();
+        _token = "";
+    }
+
+    private void LimparMensagens()
+    {
+        _erro = null;
+        _mensagemErro = null;
+        _mensagemSolicitacao = null;
+    }
+}

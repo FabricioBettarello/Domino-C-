@@ -1,0 +1,366 @@
+@page "/jogador/{JogadorId}/partidas/{PartidaId}"
+@implements IDisposable
+@inject IDominoApiClient Api
+@inject IEstrategiaJogo Estrategia
+@inject TimeProvider Relogio
+@inject IOptions<OpcoesApi> Opcoes
+
+<PageTitle>Mesa · Dominó Ponta de Quina</PageTitle>
+
+@if (_sessao?.Estado is not { } estado)
+{
+    <section class="painel estreito">
+        <h1>Mesa</h1>
+        <p>@(_carregando ? "Carregando a mesa..." : "Não foi possível carregar a mesa.")</p>
+        <AlertaErro Erro="_erro" Mensagem="@_mensagemErro" />
+        <div class="linha-botoes">
+            <button class="botao primario" @onclick="CarregarAsync">Tentar de novo</button>
+            <a class="botao" href="@UrlPartidas">Voltar às partidas</a>
+        </div>
+    </section>
+}
+else
+{
+    <div class="mesa">
+        <header class="mesa-topo">
+            <div class="placa">
+                <span class="rotulo">👤 Oponente</span>
+                <strong>@estado.PontosAdversario</strong>
+            </div>
+            <div class="mao-oponente" aria-label="@estado.PedrasAdversario pedras do adversário">
+                @for (var i = 0; i < estado.PedrasAdversario; i++)
+                {
+                    <PedraDomino Virada="true" Vertical="true" />
+                }
+                <span class="contador">@estado.PedrasAdversario pedra(s)</span>
+            </div>
+            <div class="relogio @ClasseRelogio" title="Tempo desde que você recebeu o turno e desconto previsto pela regra futura de demora">
+                <svg viewBox="0 0 36 36" aria-hidden="true">
+                    <circle class="trilho" cx="18" cy="18" r="15.9" />
+                    <circle class="progresso" cx="18" cy="18" r="15.9" stroke-dasharray="@ProgressoRelogio 100" />
+                </svg>
+                <strong>@(estado.MinhaVez ? ((int)_sessao.TempoNoTurno.TotalSeconds).ToString() : "–")</strong>
+                <small>desconto @(estado.MinhaVez ? _sessao.DescontoPrevisto : 0)</small>
+            </div>
+        </header>
+
+        <div class="info-rodada">
+            <span>Rodada <strong>@estado.Rodada</strong></span>
+            @if (estado.Turno is { } turno) { <span>Turno <strong>@turno</strong></span> }
+            <span>Alvo <strong>@estado.PontuacaoAlvo</strong></span>
+            @if (estado.PedrasNaCava is { } cava) { <span>Cava <strong>@cava</strong></span> }
+            <span>Situação <strong>@(string.IsNullOrEmpty(estado.Situacao) ? "-" : estado.Situacao)</strong></span>
+            <span>Versão <strong>@estado.Versao</strong></span>
+            @if (_conexaoInstavel) { <span class="instavel">conexão instável</span> }
+        </div>
+
+        <section class="feltro">
+            @if (estado.EmEspera)
+            {
+                <div class="sala-espera">
+                    <div class="assento">👤</div>
+                    <p>@(estado.QuantidadeJogadores >= 2 ? "Mesa completa. Um jogador precisa iniciar a partida." : "Aguardando jogador...")</p>
+                    <p class="dica">Partida <code>@PartidaId</code> · @estado.QuantidadeJogadores/2 jogadores</p>
+                    <button class="botao primario grande" disabled="@_sessao.AcaoEmAndamento" @onclick="IniciarAsync">Iniciar partida</button>
+                </div>
+            }
+            else
+            {
+                <div class="cadeia">
+                    @for (var i = 0; i < estado.Mesa.Count; i++)
+                    {
+                        var pedra = estado.Mesa[i];
+                        var destaque = (i == 0 && LadoDisponivel(LadoMesa.Esquerda)) ||
+                                       (i == estado.Mesa.Count - 1 && LadoDisponivel(LadoMesa.Direita));
+                        <PedraDomino Pedra="pedra" Vertical="pedra.EhDupla" Destaque="destaque" />
+                    }
+                </div>
+                @if (estado.Mesa.Count > 0)
+                {
+                    <p class="pontas">
+                        Pontas: <strong>@estado.PontaEsquerda</strong> · <strong>@estado.PontaDireita</strong>
+                        (soma @((estado.PontaEsquerda ?? 0) + (estado.PontaDireita ?? 0)))
+                    </p>
+                }
+                @if (estado.Mesa.Count == 0 && estado.PedraAbertura is { } abertura)
+                {
+                    <p class="pontas">Abertura obrigatória: <strong>@abertura</strong></p>
+                }
+            }
+
+            <div class="aviso-vez @(estado.MinhaVez ? "minha" : "")">@TextoVez(estado)</div>
+        </section>
+
+        <footer class="mesa-base">
+            <div class="placa voce">
+                <span class="rotulo">👤 Você</span>
+                <strong>@estado.MeusPontos</strong>
+            </div>
+
+            <div class="minha-mao">
+                @foreach (var pedra in estado.MinhaMao)
+                {
+                    <PedraDomino Pedra="pedra" Vertical="true"
+                                 Selecionada="@(_selecionada == pedra)"
+                                 Desabilitada="@(!PodeJogarPedra(pedra))"
+                                 OnClick="() => SelecionarAsync(pedra)" />
+                }
+            </div>
+
+            <div class="acoes">
+                @if (_selecionada is { } selecionada)
+                {
+                    @foreach (var jogada in JogadasDisponiveis.Where(j => j.Pedra == selecionada))
+                    {
+                        <button class="botao primario" @onclick="() => JogarAsync(jogada.Pedra, jogada.Lado)">
+                            @(jogada.Lado == LadoMesa.Esquerda ? "◀ Esquerda" : "Direita ▶") @(jogada.Pontos > 0 ? $"(+{jogada.Pontos})" : "")
+                        </button>
+                    }
+                }
+                <button class="botao primario" disabled="@(!estado.PodeComprar || _sessao.AcaoEmAndamento)" @onclick="ComprarAsync">Comprar</button>
+                <button class="botao" disabled="@(!estado.PodePassar || _sessao.AcaoEmAndamento)" @onclick="PassarAsync">Passar</button>
+                <label class="interruptor">
+                    <input type="checkbox" @bind="_modoAutonomo" />
+                    Jogador autônomo
+                </label>
+            </div>
+        </footer>
+
+        @if (_modoAutonomo && _jogadorAutonomo.UltimaDecisao is { } decisao)
+        {
+            <p class="decisao">🤖 @decisao.Motivo</p>
+        }
+        @if (_aviso is not null)
+        {
+            <p class="alerta ok">@_aviso</p>
+        }
+        <AlertaErro Erro="_erro" Mensagem="@_mensagemErro" AoFechar="LimparMensagens" />
+
+        <details class="json-bruto">
+            <summary>Estado recebido da API (JSON)</summary>
+            <pre>@estado.JsonBruto</pre>
+        </details>
+        <a class="voltar" href="@UrlPartidas">‹ Voltar às partidas</a>
+    </div>
+
+    @if (estado.Encerrada)
+    {
+        <div class="sobreposicao">
+            <div class="painel resultado">
+                <h2>@TituloResultado(estado)</h2>
+                <ul>
+                    @foreach (var p in _resultado?.Placar is { Count: > 0 } placar ? placar : estado.Placar)
+                    {
+                        <li class="@(p.SouEu ? "eu" : "")">
+                            <span>@(p.SouEu ? "Você" : p.Nome ?? "Oponente")</span>
+                            <strong>@p.Pontos</strong>
+                        </li>
+                    }
+                </ul>
+                <a class="botao primario grande" href="@UrlPartidas">Voltar às partidas</a>
+            </div>
+        </div>
+    }
+}
+
+@code {
+    private static readonly TimeSpan AtrasoAutonomo = TimeSpan.FromMilliseconds(1200);
+
+    [Parameter] public string JogadorId { get; set; } = "";
+    [Parameter] public string PartidaId { get; set; } = "";
+
+    private SessaoPartida? _sessao;
+    private JogadorAutonomo _jogadorAutonomo = default!;
+    private bool _modoAutonomo;
+    private DateTimeOffset _autonomoPausadoAte;
+    private bool _carregando = true;
+    private bool _conexaoInstavel;
+    private int _ultimaRodada;
+    private Pedra? _selecionada;
+    private string? _aviso;
+    private string? _mensagemErro;
+    private ApiException? _erro;
+    private ResultadoPartida? _resultado;
+    private readonly CancellationTokenSource _cts = new();
+
+    private string UrlPartidas => $"/jogador/{Uri.EscapeDataString(JogadorId)}/partidas";
+
+    private IReadOnlyList<JogadaPossivel> JogadasDisponiveis =>
+        _sessao?.Estado is { MinhaVez: true, PodeJogar: true } estado ? RegrasMesa.JogadasValidas(estado) : [];
+
+    private double ProgressoRelogio =>
+        _sessao?.Estado is { MinhaVez: true } ? Math.Min(_sessao.TempoNoTurno.TotalSeconds, 60) / 60 * 100 : 0;
+
+    private string ClasseRelogio => (_sessao?.Estado?.MinhaVez ?? false) ? _sessao!.DescontoPrevisto switch
+    {
+        0 => "ok",
+        1 => "atencao",
+        _ => "alerta"
+    } : "parado";
+
+    protected override async Task OnInitializedAsync()
+    {
+        _sessao = new SessaoPartida(Api, PartidaId, JogadorId, Relogio);
+        _jogadorAutonomo = new JogadorAutonomo(Estrategia);
+        await CarregarAsync();
+        _ = AcompanharAsync();
+    }
+
+    private async Task CarregarAsync()
+    {
+        if (_sessao is null) return;
+        LimparMensagens();
+        _carregando = true;
+        try
+        {
+            await _sessao.CarregarAsync(_cts.Token);
+            await AoMudarEstadoAsync();
+        }
+        catch (ApiException ex) { _erro = ex; }
+        catch (Exception ex) when (ex is HttpRequestException or TaskCanceledException && !_cts.IsCancellationRequested)
+        {
+            _mensagemErro = $"Não foi possível falar com a API: {ex.Message}";
+        }
+        finally { _carregando = false; }
+    }
+
+    /// <summary>Laço da mesa: consulta /atualizacoes, atualiza o relógio e aciona o jogador autônomo.</summary>
+    private async Task AcompanharAsync()
+    {
+        var intervalo = TimeSpan.FromMilliseconds(Math.Max(500, Opcoes.Value.IntervaloAtualizacaoMs));
+        var ultimaConsulta = DateTimeOffset.MinValue;
+        using var timer = new PeriodicTimer(TimeSpan.FromMilliseconds(500));
+        try
+        {
+            while (await timer.WaitForNextTickAsync(_cts.Token))
+            {
+                if (_sessao is null) continue;
+
+                if (Relogio.GetUtcNow() - ultimaConsulta >= intervalo && !_sessao.AcaoEmAndamento)
+                {
+                    ultimaConsulta = Relogio.GetUtcNow();
+                    await SincronizarAsync();
+                }
+
+                if (_modoAutonomo) await JogarAutonomoAsync();
+                await InvokeAsync(StateHasChanged);
+            }
+        }
+        catch (OperationCanceledException) { }
+    }
+
+    private async Task SincronizarAsync()
+    {
+        try
+        {
+            var mudou = await _sessao!.SincronizarAsync(_cts.Token);
+            _conexaoInstavel = false;
+            if (mudou) await AoMudarEstadoAsync();
+        }
+        catch (ApiException ex) { _erro = ex; }
+        catch (Exception ex) when (ex is HttpRequestException or TaskCanceledException && !_cts.IsCancellationRequested)
+        {
+            _conexaoInstavel = true;
+        }
+    }
+
+    private async Task AoMudarEstadoAsync()
+    {
+        if (_sessao?.Estado is not { } estado) return;
+
+        if (_ultimaRodada > 0 && estado.Rodada > _ultimaRodada)
+            _aviso = $"Rodada {estado.Rodada} começou: nova distribuição e nova abertura.";
+        _ultimaRodada = estado.Rodada;
+
+        if (_selecionada is { } sel && !estado.MinhaMao.Contains(sel)) _selecionada = null;
+
+        if (estado.Encerrada && _resultado is null)
+        {
+            try { _resultado = await _sessao.ObterResultadoAsync(_cts.Token); }
+            catch (Exception ex) when (ex is ApiException or HttpRequestException or InvalidOperationException) { /* usa o placar do estado */ }
+        }
+    }
+
+    private async Task JogarAutonomoAsync()
+    {
+        if (_sessao?.Estado is not { MinhaVez: true } || _sessao.AcaoEmAndamento) return;
+        if (_sessao.TempoNoTurno < AtrasoAutonomo || Relogio.GetUtcNow() < _autonomoPausadoAte) return;
+
+        var resultado = await _jogadorAutonomo.JogarVezAsync(_sessao, _cts.Token);
+        if (resultado is null) return;
+
+        // Em caso de rejeição, espera um pouco antes de tentar de novo com o estado recarregado.
+        if (!resultado.Sucesso) _autonomoPausadoAte = Relogio.GetUtcNow().AddSeconds(3);
+        await RegistrarAsync(resultado);
+    }
+
+    private bool PodeJogarPedra(Pedra pedra) => JogadasDisponiveis.Any(j => j.Pedra == pedra);
+
+    private bool LadoDisponivel(LadoMesa lado) =>
+        _selecionada is { } sel && JogadasDisponiveis.Any(j => j.Pedra == sel && j.Lado == lado);
+
+    private async Task SelecionarAsync(Pedra pedra)
+    {
+        var opcoes = JogadasDisponiveis.Where(j => j.Pedra == pedra).ToList();
+        if (opcoes.Count == 0) return;
+
+        if (opcoes.Count == 1)
+        {
+            await JogarAsync(pedra, opcoes[0].Lado);
+            return;
+        }
+
+        _selecionada = _selecionada == pedra ? null : pedra;
+    }
+
+    private async Task JogarAsync(Pedra pedra, LadoMesa lado)
+    {
+        _selecionada = null;
+        await RegistrarAsync(await _sessao!.JogarAsync(pedra, lado, _cts.Token));
+    }
+
+    private async Task ComprarAsync() => await RegistrarAsync(await _sessao!.ComprarAsync(_cts.Token));
+
+    private async Task PassarAsync() => await RegistrarAsync(await _sessao!.PassarAsync(_cts.Token));
+
+    private async Task IniciarAsync() => await RegistrarAsync(await _sessao!.IniciarAsync(_cts.Token));
+
+    /// <summary>Mostra o resultado real da ação: sucesso só quando a API confirmou.</summary>
+    private async Task RegistrarAsync(ResultadoAcao resultado)
+    {
+        LimparMensagens();
+        if (resultado.Sucesso) _aviso = resultado.Mensagem;
+        else if (resultado.Erro is not null) _erro = resultado.Erro;
+        else _mensagemErro = resultado.Mensagem;
+
+        await AoMudarEstadoAsync();
+    }
+
+    private void LimparMensagens()
+    {
+        _aviso = null;
+        _erro = null;
+        _mensagemErro = null;
+    }
+
+    private static string TextoVez(EstadoPartida estado) => estado switch
+    {
+        { Encerrada: true } => "Partida encerrada",
+        { EmEspera: true } => "Sala de espera",
+        { ProximaAcao: ProximaAcao.JogarAbertura } => "Sua vez · jogue a pedra de abertura",
+        { ProximaAcao: ProximaAcao.Jogar } => "Sua vez",
+        { ProximaAcao: ProximaAcao.Comprar } => "Sua vez · sem encaixe, compre da cava",
+        { ProximaAcao: ProximaAcao.Passar } => "Sua vez · sem encaixe e sem cava, passe",
+        { ProximaAcao: ProximaAcao.Aguardar } => "Vez do adversário",
+        _ => "Aguardando"
+    };
+
+    private string TituloResultado(EstadoPartida estado)
+    {
+        var vencedor = _resultado?.VencedorId ?? estado.VencedorId;
+        if (_resultado?.Venci == true || vencedor == JogadorId) return "Você venceu! 🎉";
+        return vencedor is null ? "Partida encerrada" : "Vitória do adversário";
+    }
+
+    public void Dispose() => _cts.Cancel();
+}

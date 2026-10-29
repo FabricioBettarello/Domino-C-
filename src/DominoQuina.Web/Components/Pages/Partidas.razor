@@ -1,0 +1,183 @@
+@page "/jogador/{JogadorId}/partidas"
+@implements IDisposable
+@inject IDominoApiClient Api
+@inject NavigationManager Navegacao
+
+<PageTitle>Partidas · Dominó Ponta de Quina</PageTitle>
+
+<div class="sala">
+    <aside class="painel lista-partidas">
+        <h1>Partidas</h1>
+        <p class="dica">Escolha uma mesa e jogue</p>
+
+        @if (_partidas.Count == 0)
+        {
+            <p class="dica">@(_carregando ? "Carregando..." : "Nenhuma partida aberta. Crie uma mesa.")</p>
+        }
+
+        @foreach (var partida in _partidas)
+        {
+            <button class="item-partida @(partida.Id == _selecionada?.Id ? "ativa" : "")" @onclick="() => _selecionada = partida">
+                <span class="vagas">👥 @partida.QuantidadeJogadores/@partida.MaximoJogadores</span>
+                <span>Até @partida.PontuacaoAlvo</span>
+                @if (partida.Participo) { <span class="etiqueta">sua</span> }
+                <span class="seta">›</span>
+            </button>
+        }
+
+        <button class="botao" @onclick="CarregarAsync" disabled="@_ocupado">Atualizar lista</button>
+    </aside>
+
+    <section class="mesa-vazia">
+        <div class="feltro pequeno">
+            <p>@(_selecionada is null ? "Selecione ou crie uma mesa" : $"Mesa até {_selecionada.PontuacaoAlvo} pontos")</p>
+        </div>
+    </section>
+
+    <aside class="painel jogador">
+        <div class="avatar">🁫</div>
+        <h2>Você</h2>
+        <p class="dica">Perfil <code>@JogadorId</code></p>
+
+        @if (_selecionada is not null)
+        {
+            <dl class="detalhes">
+                <dt>Jogadores</dt><dd>@_selecionada.QuantidadeJogadores/@_selecionada.MaximoJogadores</dd>
+                <dt>Alvo</dt><dd>Até @_selecionada.PontuacaoAlvo</dd>
+                <dt>Situação</dt><dd>@(string.IsNullOrEmpty(_selecionada.Situacao) ? "-" : _selecionada.Situacao)</dd>
+            </dl>
+            @if (_selecionada.Participo)
+            {
+                <button class="botao primario grande" @onclick="() => AbrirMesa(_selecionada.Id)">Abrir mesa ›</button>
+            }
+            else
+            {
+                <button class="botao primario grande" disabled="@(_ocupado || !_selecionada.TemVaga)" @onclick="EntrarAsync">Entrar na partida ›</button>
+            }
+        }
+
+        <hr />
+        <h3>Criar mesa</h3>
+        <div class="opcoes-alvo">
+            @foreach (var alvo in AlvosDisponiveis)
+            {
+                <label class="@(alvo == _pontuacaoAlvo ? "marcado" : "")">
+                    <input type="radio" name="alvo" checked="@(alvo == _pontuacaoAlvo)" @onchange="() => _pontuacaoAlvo = alvo" />
+                    Até @alvo
+                </label>
+            }
+        </div>
+        <button class="botao primario" disabled="@_ocupado" @onclick="CriarAsync">Criar mesa</button>
+
+        <hr />
+        <form class="linha-form" @onsubmit="() => AbrirMesa(_idManual.Trim())" @onsubmit:preventDefault>
+            <label>Reabrir partida pelo ID
+                <input @bind="_idManual" placeholder="id da partida" />
+            </label>
+            <button class="botao" type="submit">Abrir</button>
+        </form>
+
+        <AlertaErro Erro="_erro" Mensagem="@_mensagemErro" AoFechar="Limpar" />
+    </aside>
+</div>
+
+@code {
+    private static readonly int[] AlvosDisponiveis = [50, 100, 150];
+
+    [Parameter] public string JogadorId { get; set; } = "";
+
+    private List<ResumoPartida> _partidas = [];
+    private ResumoPartida? _selecionada;
+    private int _pontuacaoAlvo = 50;
+    private string _idManual = "";
+    private bool _carregando = true;
+    private bool _ocupado;
+    private ApiException? _erro;
+    private string? _mensagemErro;
+    private readonly CancellationTokenSource _cts = new();
+
+    protected override async Task OnInitializedAsync()
+    {
+        await CarregarAsync();
+        _ = AtualizarPeriodicamenteAsync();
+    }
+
+    private async Task CarregarAsync()
+    {
+        try
+        {
+            _partidas = (await Api.ListarPartidasAsync(JogadorId, _cts.Token))
+                .OrderByDescending(p => p.Participo)
+                .ThenByDescending(p => p.TemVaga)
+                .ToList();
+            _selecionada = _partidas.FirstOrDefault(p => p.Id == _selecionada?.Id) ?? _partidas.FirstOrDefault();
+        }
+        catch (ApiException ex) { _erro = ex; }
+        catch (HttpRequestException ex) { _mensagemErro = $"Não foi possível falar com a API: {ex.Message}"; }
+        catch (TaskCanceledException) when (!_cts.IsCancellationRequested) { _mensagemErro = "A API não respondeu a tempo."; }
+        finally { _carregando = false; }
+    }
+
+    private async Task AtualizarPeriodicamenteAsync()
+    {
+        using var timer = new PeriodicTimer(TimeSpan.FromSeconds(5));
+        try
+        {
+            while (await timer.WaitForNextTickAsync(_cts.Token))
+            {
+                if (_ocupado) continue;
+                await CarregarAsync();
+                await InvokeAsync(StateHasChanged);
+            }
+        }
+        catch (OperationCanceledException) { }
+    }
+
+    private async Task CriarAsync()
+    {
+        Limpar();
+        _ocupado = true;
+        try
+        {
+            var partidaId = await Api.CriarPartidaAsync(JogadorId, _pontuacaoAlvo, _cts.Token);
+            AbrirMesa(partidaId);
+        }
+        catch (ApiException ex) { _erro = ex; }
+        catch (Exception ex) when (ex is HttpRequestException or InvalidOperationException) { _mensagemErro = ex.Message; }
+        finally { _ocupado = false; }
+    }
+
+    private async Task EntrarAsync()
+    {
+        if (_selecionada is null) return;
+        Limpar();
+        _ocupado = true;
+        try
+        {
+            // A vaga é revalidada pela API no momento do ingresso.
+            await Api.EntrarPartidaAsync(_selecionada.Id, JogadorId, _cts.Token);
+            AbrirMesa(_selecionada.Id);
+        }
+        catch (ApiException ex)
+        {
+            _erro = ex;
+            await CarregarAsync();
+        }
+        catch (HttpRequestException ex) { _mensagemErro = ex.Message; }
+        finally { _ocupado = false; }
+    }
+
+    private void AbrirMesa(string partidaId)
+    {
+        if (string.IsNullOrWhiteSpace(partidaId)) return;
+        Navegacao.NavigateTo($"/jogador/{Uri.EscapeDataString(JogadorId)}/partidas/{Uri.EscapeDataString(partidaId)}");
+    }
+
+    private void Limpar()
+    {
+        _erro = null;
+        _mensagemErro = null;
+    }
+
+    public void Dispose() => _cts.Cancel();
+}

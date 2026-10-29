@@ -1,0 +1,265 @@
+/* Dominó Ponta de Quina — tema escuro de mesa com destaque rosa (referência: slides 19 e 20). */
+
+:root {
+    --fundo: #121214;
+    --painel: #1c1c20;
+    --painel-borda: #2c2c33;
+    --texto: #ececf1;
+    --texto-suave: #9a9aa6;
+    --destaque: #ed145b;
+    --destaque-escuro: #b80f47;
+    --feltro: #1a1a1d;
+    --madeira: #3b2a21;
+    --pedra: #f4f1e8;
+    --pedra-borda: #cfc9b8;
+    --pip: #18181b;
+    --ok: #2fbf71;
+    --atencao: #f5b041;
+    --perigo: #ff4d6d;
+    --raio: 14px;
+}
+
+* { box-sizing: border-box; }
+
+html, body {
+    margin: 0;
+    min-height: 100%;
+    background: radial-gradient(circle at 50% 0%, #26202a 0%, var(--fundo) 60%);
+    color: var(--texto);
+    font-family: "Segoe UI", system-ui, -apple-system, sans-serif;
+}
+
+a { color: var(--destaque); }
+code { color: #f7a8c3; font-size: .85em; word-break: break-all; }
+h1, h2, h3 { margin: 0 0 .5rem; }
+h1:focus { outline: none; }
+hr { border: 0; border-top: 1px solid var(--painel-borda); margin: 1.25rem 0; }
+
+.app { min-height: 100vh; display: flex; flex-direction: column; }
+
+.topo {
+    display: flex; align-items: center; gap: 1.5rem;
+    padding: .75rem 1.5rem; border-bottom: 1px solid var(--painel-borda);
+    background: rgba(0, 0, 0, .35);
+}
+.marca { color: var(--texto); font-weight: 700; text-decoration: none; font-size: 1.1rem; }
+.marca span { color: var(--destaque); }
+.topo nav { display: flex; gap: 1rem; }
+.topo nav a { color: var(--texto-suave); text-decoration: none; }
+.topo nav a.active { color: var(--texto); border-bottom: 2px solid var(--destaque); }
+.topo .conta { margin-left: auto; color: var(--texto-suave); font-size: .9rem; }
+
+main { flex: 1; padding: 1.5rem; }
+
+/* Painéis e formulários */
+.painel {
+    background: var(--painel); border: 1px solid var(--painel-borda);
+    border-radius: var(--raio); padding: 1.5rem;
+}
+.painel.estreito { max-width: 640px; margin: 0 auto; }
+.dica { color: var(--texto-suave); font-size: .9rem; }
+.sucesso { color: var(--ok); }
+
+form { display: flex; flex-direction: column; gap: .75rem; margin-bottom: 1rem; }
+.linha-form { flex-direction: row; align-items: flex-end; flex-wrap: wrap; }
+.linha-form label { flex: 1; min-width: 200px; }
+label { display: flex; flex-direction: column; gap: .35rem; font-size: .9rem; color: var(--texto-suave); }
+input, textarea {
+    background: #111114; color: var(--texto); border: 1px solid var(--painel-borda);
+    border-radius: 10px; padding: .65rem .8rem; font: inherit;
+}
+input:focus, textarea:focus { outline: 2px solid var(--destaque); border-color: transparent; }
+
+.botao {
+    display: inline-flex; align-items: center; justify-content: center; gap: .4rem;
+    padding: .6rem 1.1rem; border-radius: 10px; border: 1px solid var(--painel-borda);
+    background: #2a2a31; color: var(--texto); font: inherit; font-weight: 600;
+    cursor: pointer; text-decoration: none;
+}
+.botao:hover:not(:disabled) { filter: brightness(1.15); }
+.botao:disabled { opacity: .4; cursor: not-allowed; }
+.botao.primario { background: linear-gradient(180deg, var(--destaque), var(--destaque-escuro)); border-color: transparent; }
+.botao.grande { width: 100%; padding: .9rem; font-size: 1.05rem; }
+.linha-botoes { display: flex; gap: .75rem; flex-wrap: wrap; }
+
+.etiqueta {
+    display: inline-block; padding: .1rem .5rem; border-radius: 999px;
+    background: rgba(237, 20, 91, .18); color: #ff7aa6; font-size: .75rem; margin-left: .4rem;
+}
+
+.alerta {
+    position: relative; display: flex; flex-direction: column; gap: .25rem;
+    margin-top: 1rem; padding: .8rem 2.5rem .8rem 1rem; border-radius: 10px;
+}
+.alerta.erro { background: rgba(255, 77, 109, .12); border: 1px solid rgba(255, 77, 109, .5); color: #ffc2cf; }
+.alerta.ok { background: rgba(47, 191, 113, .12); border: 1px solid rgba(47, 191, 113, .45); color: #b9f3d3; }
+.alerta small { color: var(--texto-suave); }
+.alerta .fechar {
+    position: absolute; top: .4rem; right: .6rem; background: none; border: 0;
+    color: inherit; font-size: 1.3rem; cursor: pointer;
+}
+
+/* Perfis */
+.lista-perfis { list-style: none; padding: 0; display: flex; flex-direction: column; gap: .75rem; }
+.lista-perfis li {
+    display: flex; justify-content: space-between; align-items: center; gap: 1rem; flex-wrap: wrap;
+    padding: .9rem 1rem; border: 1px solid var(--painel-borda); border-radius: 12px; background: #17171a;
+}
+.lista-perfis li > div:first-child { display: flex; flex-direction: column; gap: .2rem; }
+
+/* Sala de partidas */
+.sala { display: grid; grid-template-columns: 300px 1fr 300px; gap: 1.25rem; align-items: start; }
+.lista-partidas { display: flex; flex-direction: column; gap: .6rem; }
+.item-partida {
+    display: grid; grid-template-columns: auto 1fr auto auto; align-items: center; gap: .75rem;
+    padding: .8rem 1rem; border-radius: 12px; border: 1px solid var(--painel-borda);
+    background: #17171a; color: var(--texto); font: inherit; cursor: pointer; text-align: left;
+}
+.item-partida.ativa { border-color: var(--destaque); box-shadow: 0 0 0 1px var(--destaque) inset; }
+.item-partida .vagas { color: var(--texto-suave); }
+.item-partida.ativa .vagas { color: var(--destaque); }
+.item-partida .seta { color: var(--texto-suave); font-size: 1.2rem; }
+
+.mesa-vazia .feltro.pequeno { min-height: 420px; display: grid; place-items: center; color: var(--texto-suave); }
+
+.jogador { text-align: center; }
+.jogador .avatar {
+    width: 96px; height: 96px; margin: 0 auto .75rem; border-radius: 50%;
+    display: grid; place-items: center; font-size: 3rem;
+    border: 3px solid var(--destaque); background: #241a20;
+}
+.detalhes { display: grid; grid-template-columns: auto 1fr; gap: .4rem 1rem; text-align: left; margin: 1rem 0; }
+.detalhes dt { color: var(--texto-suave); }
+.detalhes dd { margin: 0; font-weight: 600; }
+.opcoes-alvo { display: flex; gap: .5rem; margin-bottom: .75rem; }
+.opcoes-alvo label {
+    flex: 1; flex-direction: row; justify-content: center; padding: .5rem; border-radius: 10px;
+    border: 1px solid var(--painel-borda); cursor: pointer; color: var(--texto);
+}
+.opcoes-alvo label.marcado { border-color: var(--destaque); background: rgba(237, 20, 91, .12); }
+.opcoes-alvo input { display: none; }
+.jogador .linha-form { flex-direction: column; align-items: stretch; }
+
+/* Mesa de jogo */
+.mesa { max-width: 1200px; margin: 0 auto; display: flex; flex-direction: column; gap: 1rem; }
+
+.mesa-topo, .mesa-base {
+    display: grid; grid-template-columns: 160px 1fr auto; align-items: center; gap: 1rem;
+}
+
+.placa {
+    background: var(--painel); border: 1px solid var(--painel-borda); border-radius: var(--raio);
+    padding: .75rem 1rem; display: flex; flex-direction: column;
+}
+.placa .rotulo { color: var(--texto-suave); font-size: .85rem; }
+.placa strong { font-size: 2rem; line-height: 1.1; }
+.placa.voce { border-color: rgba(237, 20, 91, .5); }
+
+.mao-oponente, .minha-mao { display: flex; gap: .4rem; justify-content: center; align-items: center; flex-wrap: wrap; }
+.mao-oponente .contador { color: var(--texto-suave); font-size: .85rem; margin-left: .5rem; }
+
+.relogio { position: relative; width: 92px; height: 92px; display: grid; place-items: center; text-align: center; }
+.relogio svg { position: absolute; inset: 0; transform: rotate(-90deg); }
+.relogio circle { fill: none; stroke-width: 3; }
+.relogio .trilho { stroke: #2c2c33; }
+.relogio .progresso { stroke: var(--ok); stroke-linecap: round; transition: stroke-dasharray .4s; }
+.relogio.atencao .progresso { stroke: var(--atencao); }
+.relogio.alerta .progresso { stroke: var(--perigo); }
+.relogio strong { font-size: 1.5rem; margin-top: -.6rem; }
+.relogio small { position: absolute; bottom: 18px; font-size: .62rem; color: var(--texto-suave); }
+
+.info-rodada { display: flex; flex-wrap: wrap; gap: .5rem 1.25rem; color: var(--texto-suave); font-size: .9rem; justify-content: center; }
+.info-rodada strong { color: var(--texto); }
+.info-rodada .instavel { color: var(--atencao); }
+
+.feltro {
+    position: relative; min-height: 300px; padding: 2rem 1.5rem 4.5rem;
+    background: radial-gradient(ellipse at center, #232327 0%, var(--feltro) 70%);
+    border: 10px solid var(--madeira); border-radius: 160px;
+    box-shadow: inset 0 0 0 2px var(--destaque), inset 0 0 60px rgba(0, 0, 0, .6), 0 20px 40px rgba(0, 0, 0, .4);
+    display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 1rem;
+}
+
+.cadeia {
+    display: flex; align-items: center; gap: 3px; max-width: 100%;
+    overflow-x: auto; padding: .5rem 1rem;
+}
+.pontas { margin: 0; color: var(--texto-suave); }
+.pontas strong { color: var(--texto); }
+
+.aviso-vez {
+    position: absolute; bottom: 1rem; left: 50%; transform: translateX(-50%);
+    padding: .45rem 1.4rem; border-radius: 999px; background: #26262b; color: var(--texto-suave); font-weight: 600;
+    white-space: nowrap;
+}
+.aviso-vez.minha {
+    background: linear-gradient(180deg, var(--destaque), var(--destaque-escuro)); color: #fff;
+    box-shadow: 0 0 18px rgba(237, 20, 91, .6);
+}
+
+.sala-espera { text-align: center; }
+.sala-espera .assento {
+    width: 80px; height: 80px; margin: 0 auto .5rem; border-radius: 50%;
+    border: 2px dashed var(--texto-suave); display: grid; place-items: center; font-size: 2rem;
+}
+
+.acoes { display: flex; flex-direction: column; gap: .5rem; min-width: 170px; }
+.interruptor { flex-direction: row; align-items: center; gap: .5rem; color: var(--texto); cursor: pointer; }
+.interruptor input { width: 18px; height: 18px; accent-color: var(--destaque); }
+
+.decisao { color: var(--texto-suave); margin: 0; text-align: center; }
+.json-bruto { color: var(--texto-suave); font-size: .85rem; }
+.json-bruto pre { max-height: 240px; overflow: auto; background: #0d0d0f; padding: 1rem; border-radius: 10px; white-space: pre-wrap; word-break: break-all; }
+.voltar { align-self: flex-start; }
+
+.sobreposicao { position: fixed; inset: 0; background: rgba(0, 0, 0, .7); display: grid; place-items: center; z-index: 10; }
+.resultado { width: min(420px, 90vw); text-align: center; }
+.resultado ul { list-style: none; padding: 0; margin: 1rem 0 1.5rem; }
+.resultado li { display: flex; justify-content: space-between; padding: .6rem .2rem; border-bottom: 1px solid var(--painel-borda); }
+.resultado li.eu { color: #ff7aa6; }
+
+/* Pedras de dominó */
+.pedra {
+    display: inline-flex; align-items: stretch; padding: 3px; margin: 0;
+    background: linear-gradient(180deg, #fffdf6, var(--pedra));
+    border: 1px solid var(--pedra-borda); border-radius: 7px;
+    box-shadow: 0 3px 0 #b9b2a0, 0 6px 10px rgba(0, 0, 0, .45);
+    font: inherit; color: inherit;
+}
+.pedra:disabled { cursor: default; }
+.pedra.horizontal { flex-direction: row; width: 68px; height: 36px; }
+.pedra.vertical { flex-direction: column; width: 36px; height: 68px; }
+.minha-mao .pedra.vertical { width: 46px; height: 88px; }
+
+.pedra .metade { flex: 1; display: grid; grid-template-columns: repeat(3, 1fr); grid-template-rows: repeat(3, 1fr); padding: 2px; }
+.pedra .divisor { background: #bdb6a3; }
+.pedra.horizontal .divisor { width: 1px; margin: 3px 0; }
+.pedra.vertical .divisor { height: 1px; margin: 0 3px; }
+.pip { display: block; margin: auto; width: 62%; aspect-ratio: 1; border-radius: 50%; }
+.pip.on { background: radial-gradient(circle at 35% 35%, #4a4a50, var(--pip)); }
+
+.pedra .verso {
+    flex: 1; border-radius: 4px;
+    background: repeating-linear-gradient(45deg, #2b2b30 0 4px, #222226 4px 8px);
+    border: 1px solid #3a3a40;
+}
+.pedra:has(.verso) { background: #1f1f23; border-color: #4a4a52; box-shadow: 0 3px 0 #0e0e10; }
+
+.pedra.clicavel { cursor: pointer; transition: transform .12s; }
+.pedra.clicavel:hover { transform: translateY(-6px); }
+.pedra.selecionada { transform: translateY(-10px); box-shadow: 0 0 0 3px var(--destaque), 0 0 18px rgba(237, 20, 91, .7); }
+.pedra.destaque { box-shadow: 0 0 0 2px var(--destaque), 0 0 16px rgba(237, 20, 91, .7); }
+.minha-mao .pedra.desabilitada { opacity: .55; }
+
+#blazor-error-ui {
+    display: none; position: fixed; bottom: 0; left: 0; right: 0; z-index: 100;
+    padding: .75rem 1.25rem; background: #5c1027; color: #fff;
+}
+#blazor-error-ui .reload { color: #fff; margin-left: .5rem; }
+
+@media (max-width: 1000px) {
+    .sala { grid-template-columns: 1fr; }
+    .mesa-topo, .mesa-base { grid-template-columns: 1fr; justify-items: center; }
+    .feltro { border-radius: 40px; }
+    .acoes { flex-direction: row; flex-wrap: wrap; justify-content: center; }
+}

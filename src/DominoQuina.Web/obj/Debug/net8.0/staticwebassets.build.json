@@ -1,0 +1,39 @@
+{
+  "Version": 1,
+  "Hash": "UJmRjJo/wKu8Bv+09R4LvMcnUaISHdSrMPtAoXhsAk8=",
+  "Source": "DominoQuina.Web",
+  "BasePath": "_content/DominoQuina.Web",
+  "Mode": "Default",
+  "ManifestType": "Build",
+  "ReferencedProjectsConfiguration": [],
+  "DiscoveryPatterns": [
+    {
+      "Name": "DominoQuina.Web\\wwwroot",
+      "Source": "DominoQuina.Web",
+      "ContentRoot": "C:\\Users\\Fabricio Bettarello\\Desktop\\csharp\\src\\DominoQuina.Web\\wwwroot\\",
+      "BasePath": "_content/DominoQuina.Web",
+      "Pattern": "**"
+    }
+  ],
+  "Assets": [
+    {
+      "Identity": "C:\\Users\\Fabricio Bettarello\\Desktop\\csharp\\src\\DominoQuina.Web\\wwwroot\\app.css",
+      "SourceId": "DominoQuina.Web",
+      "SourceType": "Discovered",
+      "ContentRoot": "C:\\Users\\Fabricio Bettarello\\Desktop\\csharp\\src\\DominoQuina.Web\\wwwroot\\",
+      "BasePath": "_content/DominoQuina.Web",
+      "RelativePath": "app.css",
+      "AssetKind": "All",
+      "AssetMode": "All",
+      "AssetRole": "Primary",
+      "AssetMergeBehavior": "PreferTarget",
+      "AssetMergeSource": "",
+      "RelatedAsset": "",
+      "AssetTraitName": "",
+      "AssetTraitValue": "",
+      "CopyToOutputDirectory": "Never",
+      "CopyToPublishDirectory": "PreserveNewest",
+      "OriginalItemSpec": "wwwroot\\app.css"
+    }
+  ]
+}
